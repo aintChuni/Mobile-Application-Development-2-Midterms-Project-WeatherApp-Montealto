@@ -1,17 +1,101 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+    <ion-title>🌤️ Weather</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goToSettings()">
+        <ion-icon name="settings-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content class="ion-padding">
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <ion-card *ngIf="cachedDataUsed" color="warning">
+    <ion-card-content class="cached-warning">
+      ⚠️ <strong>Offline Mode:</strong> Displaying cached weather data due to network issues.
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="floating">🌍 Enter City Name</ion-label>
+        <ion-input [(ngModel)]="manualCity"></ion-input>
+      </ion-item>
+      <div class="button-group">
+        <ion-button expand="block" (click)="getWeatherByCity()">📍 Search</ion-button>
+        <ion-button expand="block" color="danger" (click)="useCurrentLocation()">🌎 Use Current Location</ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-button expand="full" color="primary" (click)="getWeatherAndForecast()">🔄 Refresh Weather</ion-button>
+
+  <ion-card color="light">
+    <ion-card-header>
+      <ion-card-title>📍 Location: {{ currentLocation }}</ion-card-title>
+    </ion-card-header>
+  </ion-card>
+
+  <ion-card *ngIf="weatherData" color="primary">
+    <ion-card-header>
+      <ion-card-title>🌤️ {{ weatherData.name }}</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6">
+            <p>🌡️ Temp: <strong>{{ weatherData.main.temp }}°{{ unit === 'metric' ? 'C' : 'F' }}</strong></p>
+            <p>💧 Humidity: <strong>{{ weatherData.main.humidity }}%</strong></p>
+          </ion-col>
+          <ion-col size="6">
+            <p>💨 Wind: <strong>{{ weatherData.wind.speed }} {{ unit === 'metric' ? 'm/s' : 'mph' }}</strong></p>
+            <p>☁️ Condition: <strong>{{ weatherData.weather[0]?.description }}</strong></p>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="hourlyForecast.length > 0">
+    <ion-card-header>
+      <ion-card-title>⏳ Hourly Forecast</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="hourly-scroll">
+        <div *ngFor="let forecast of hourlyForecast" class="hourly-item">
+          <ion-card class="hourly-card">
+            <ion-card-content>
+              <p>🕑 {{ forecast.dt_txt | date:'shortTime' }}</p>
+              <p>🌡️ {{ forecast.main.temp }}°{{ unit === 'metric' ? 'C' : 'F' }}</p>
+              <p>☁️ {{ forecast.weather[0].description }}</p>
+            </ion-card-content>
+          </ion-card>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card *ngIf="fiveDayForecast.length > 0">
+    <ion-card-header>
+      <ion-card-title>📅 5-Day Forecast</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row *ngFor="let day of fiveDayForecast" class="forecast-row">
+          <ion-col size="4">
+            <p>📆 {{ day.dt_txt | date:'EEEE' }}</p>
+          </ion-col>
+          <ion-col size="4">
+            <p>🌡️ {{ day.main.temp }}°{{ unit === 'metric' ? 'C' : 'F' }}</p>
+          </ion-col>
+          <ion-col size="4">
+            <p>☁️ {{ day.weather[0].description }}</p>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
 </ion-content>

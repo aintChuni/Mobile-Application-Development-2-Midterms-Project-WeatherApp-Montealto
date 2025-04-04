@@ -1,0 +1,105 @@
+.cached-warning {
+  font-size: 1rem;
+  font-weight: bold;
+  text-align: center;
+  color: #856404;
+  background-color: #fff3cd;
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.forecast-row {
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  padding: 8px 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.forecast-row:last-child {
+  border-bottom: none;
+}
+
+.hourly-scroll {
+  display: flex;
+  overflow-x: auto;
+  white-space: nowrap;
+  gap: 12px;
+  padding: 10px;
+}
+
+.hourly-item {
+  flex: 0 0 auto;
+  min-width: 120px;
+  transition: transform 0.2s ease-in-out;
+}
+
+.hourly-item:hover {
+  transform: scale(1.05);
+}
+
+.hourly-card {
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  background: var(--ion-background-color);
+  color: var(--ion-text-color);
+  box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+ion-button {
+  transition: all 0.2s ease-in-out;
+}
+
+ion-button:hover {
+  transform: scale(1.05);
+}
+
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+ion-card:hover {
+  transform: scale(1.02);
+}
+
+ion-buttons ion-button {
+  --background: none !important;
+  --box-shadow: none !important;
+  --border-radius: 0 !important;
+  --padding-start: 0 !important;
+  --padding-end: 0 !important;
+  --ripple-color: transparent !important;
+  min-width: auto !important;
+  width: auto !important;
+  height: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+ion-buttons ion-button::part(native) {
+  background: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+ion-buttons ion-button ion-icon {
+  font-size: 1.5rem;
+  color: var(--ion-text-color) !important;
+}
