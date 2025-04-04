@@ -1,3 +1,5 @@
+# Mobile Application Development 2 Midterms Project WeatherApp
+
 A weather application built with Ionic and Capacitor, designed to provide accurate and real time weather updates. The app supports geolocation based weather retrieval, customizable settings, offline mode, and severe weather notifications.
 
 Features:
