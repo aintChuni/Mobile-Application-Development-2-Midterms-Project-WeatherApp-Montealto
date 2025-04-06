@@ -11,6 +11,15 @@
 
 <ion-content class="ion-padding">
 
+  <ion-card *ngIf="severeWeatherAlert">
+    <ion-card-header>
+      <ion-card-title>⚠️ Severe Weather Alert</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <p>{{ severeWeatherAlert }}</p>
+    </ion-card-content>
+  </ion-card>
+
   <ion-card *ngIf="cachedDataUsed" color="warning">
     <ion-card-content class="cached-warning">
       ⚠️ <strong>Offline Mode:</strong> Displaying cached weather data due to network issues.

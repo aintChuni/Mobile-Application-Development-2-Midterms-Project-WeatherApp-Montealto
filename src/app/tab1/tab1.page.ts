@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { IonicModule, AlertController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 interface ForecastItem {
   dt_txt: string;
@@ -30,6 +31,9 @@ export class Tab1Page implements OnInit {
   manualCity: string = '';
   currentLocation: string = 'Current Location';
   cachedDataUsed = false;
+  severeWeatherAlert: string | null = null;
+  locationContext: string = 'your area';
+  private lastAlertedCondition: string | null = null;
 
   constructor(
     private geolocationService: GeolocationService,
@@ -39,6 +43,7 @@ export class Tab1Page implements OnInit {
   ) {}
 
   async ngOnInit() {
+    await this.requestNotificationPermission();
     await this.loadUserPreferences();
     await this.getWeatherAndForecast();
 
@@ -66,76 +71,85 @@ export class Tab1Page implements OnInit {
     this.getWeatherAndForecast();
   }
 
+  async requestNotificationPermission() {
+    const perm = await LocalNotifications.requestPermissions();
+    console.log('Notification permission status:', perm);
+  }
+
   async getWeatherAndForecast() {
     this.loading = true;
     this.cachedDataUsed = false;
-  
+
     if (this.manualCity.trim()) {
       await this.getWeatherByCity();
       this.loading = false;
       return;
     }
-  
+
     const location = await this.geolocationService.getCurrentLocation();
     if (location) {
       this.currentLocation = 'Current Location';
-  
+      this.locationContext = 'your current location';
+
       const weatherResult = await this.weatherService.getWeather(location.lat, location.lon, this.unit);
       this.weatherData = weatherResult.data;
       this.cachedDataUsed = weatherResult.cached;
-  
+
       const forecastResult = await this.weatherService.getForecast(location.lat, location.lon, this.unit);
       this.forecastData = { list: forecastResult.data.list || [] };
-  
+
       this.processForecastData();
+      this.checkForSevereWeather();
     }
-  
+
     this.loading = false;
-  }  
+  }
 
   async getWeatherByCity() {
     if (!this.manualCity.trim()) {
       await this.showAlert("Invalid Input", "Please enter a valid city name.");
       return;
     }
-  
+
     this.loading = true;
     this.cachedDataUsed = false;
-  
+
     if (!navigator.onLine) {
       await this.showAlert("No Internet", "You're offline. Please check your connection.");
       this.loading = false;
       return;
     }
-  
+
     try {
       console.log(`Fetching weather for city: ${this.manualCity}`);
-  
+
       const weatherResult = await this.weatherService.getWeatherByCity(this.manualCity, this.unit);
       this.weatherData = weatherResult.data;
       this.cachedDataUsed = weatherResult.cached;
-  
+
       const forecastResult = await this.weatherService.getForecastByCity(this.manualCity, this.unit);
       this.forecastData = { list: forecastResult.data.list || [] };
-  
-      this.processForecastData();
+
+      this.locationContext = `in ${this.manualCity}`;
       this.currentLocation = this.manualCity;
-  
+
+      this.processForecastData();
+      this.checkForSevereWeather();
+
     } catch (error: any) {
       console.error("Error fetching city weather:", error);
-  
       this.weatherData = null;
-  
+
       if (error.message === "City Not Found") {
         await this.showAlert("City Not Found", "Please enter a valid city name.");
       } else {
         await this.showAlert("Error", "An unexpected error occurred. Please try again.");
       }
     }
-  
+
     this.loading = false;
   }
-  
+
   async useCurrentLocation() {
     this.manualCity = '';
     await this.getWeatherAndForecast();
@@ -163,18 +177,64 @@ export class Tab1Page implements OnInit {
     this.fiveDayForecast = Array.from(dailyForecastMap.values()).slice(0, 5);
   }
 
+  async checkForSevereWeather() {
+    this.severeWeatherAlert = null;
+
+    if (!this.forecastData?.list?.length) return;
+
+    const notificationsPref = await Preferences.get({ key: 'notifications' });
+    if (notificationsPref.value !== 'true') return;
+
+    const keywords = ['storm', 'tornado', 'hurricane', 'extreme', 'snow', 'thunder', 'heavy rain', 'rain'];
+
+    for (const item of this.forecastData.list) {
+      const description = item.weather[0].description.toLowerCase();
+      console.log("🌩️ Checking description:", description);
+
+      if (keywords.some(keyword => description.includes(keyword))) {
+        const message = `Severe weather expected: ${description} ${this.locationContext}`;
+        this.severeWeatherAlert = `${message}`;
+        await this.sendSevereWeatherNotification(description, this.locationContext);
+        break;
+      }
+    }
+  }
+
+  async sendSevereWeatherNotification(condition: string, locationContext: string) {
+    const currentKey = `${condition}-${locationContext}`;
+    if (this.lastAlertedCondition === currentKey) return;
+
+    this.lastAlertedCondition = currentKey;
+
+    const message = `Heads up! ${condition} expected ${locationContext}.`;
+
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: 'Severe Weather Alert ⚠️',
+          body: message,
+          id: 1,
+          schedule: { at: new Date(Date.now() + 1000) },
+          sound: 'default',
+        }
+      ]
+    });
+
+    console.log("📢 Severe weather notification sent:", message);
+  }
+
   async showAlert(header: string, message: string) {
     console.log('Showing alert:', header, message);
-  
+
     const alert = await this.alertController.create({
       header,
       message,
       buttons: ['OK']
     });
-  
+
     await alert.present();
   }
-  
+
   goToSettings() {
     this.router.navigate(['/tab2']);
   }
